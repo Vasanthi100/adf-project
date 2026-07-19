@@ -1,0 +1,57 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "Vasanthi-DataFactory"
+		},
+		"LS_AWS_S3_secretAccessKey": {
+			"value": ""
+		},
+		"LS_Cloud_AzureSqlDatabase_password": {
+			"value": ""
+		},
+		"LS_DataLake_accountKey": {
+			"value": ""
+		},
+		"LS_MySQL_OnPrem_password": {
+			"value": ""
+		},
+		"LS_AWS_S3_properties_typeProperties_accessKeyId": {
+			"value": "AKIAWIGG57SA454PBXPL"
+		},
+		"LS_Cloud_AzureSqlDatabase_properties_typeProperties_server": {
+			"value": "vasanthi-sqlserverdatabase.database.windows.net"
+		},
+		"LS_Cloud_AzureSqlDatabase_properties_typeProperties_database": {
+			"value": "V-AzureSQLDB"
+		},
+		"LS_Cloud_AzureSqlDatabase_properties_typeProperties_userName": {
+			"value": "adfazuresqldatabse"
+		},
+		"LS_DataLake_properties_typeProperties_url": {
+			"value": "https://vdatalakestorageaccount.dfs.core.windows.net/"
+		},
+		"LS_GitHub_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_server": {
+			"value": "127.0.0.1"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_database": {
+			"value": "dbvasanthi"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_username": {
+			"value": "root"
+		},
+		"TG_Event_AddFile_properties_typeProperties_scope": {
+			"value": "/subscriptions/379adc65-7c1f-4650-a15b-273cd2d3493d/resourceGroups/V-ADE-RG/providers/Microsoft.Storage/storageAccounts/vdatalakestorageaccount"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

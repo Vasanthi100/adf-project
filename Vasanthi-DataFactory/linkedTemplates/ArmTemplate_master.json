@@ -1,0 +1,180 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "Vasanthi-DataFactory"
+		},
+		"LS_AWS_S3_secretAccessKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'secretAccessKey' of 'LS_AWS_S3'"
+		},
+		"LS_Cloud_AzureSqlDatabase_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Cloud_AzureSqlDatabase'"
+		},
+		"LS_DataLake_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'LS_DataLake'"
+		},
+		"LS_MySQL_OnPrem_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_MySQL_OnPrem'"
+		},
+		"LS_AWS_S3_properties_typeProperties_accessKeyId": {
+			"type": "string",
+			"defaultValue": "AKIAWIGG57SA454PBXPL"
+		},
+		"LS_Cloud_AzureSqlDatabase_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "vasanthi-sqlserverdatabase.database.windows.net"
+		},
+		"LS_Cloud_AzureSqlDatabase_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "V-AzureSQLDB"
+		},
+		"LS_Cloud_AzureSqlDatabase_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adfazuresqldatabse"
+		},
+		"LS_DataLake_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://vdatalakestorageaccount.dfs.core.windows.net/"
+		},
+		"LS_GitHub_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "127.0.0.1"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "dbvasanthi"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "root"
+		},
+		"TG_Event_AddFile_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/379adc65-7c1f-4650-a15b-273cd2d3493d/resourceGroups/V-ADE-RG/providers/Microsoft.Storage/storageAccounts/vdatalakestorageaccount"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "Vasanthi-DataFactory_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LS_AWS_S3_secretAccessKey": {
+						"value": "[parameters('LS_AWS_S3_secretAccessKey')]"
+					},
+					"LS_Cloud_AzureSqlDatabase_password": {
+						"value": "[parameters('LS_Cloud_AzureSqlDatabase_password')]"
+					},
+					"LS_DataLake_accountKey": {
+						"value": "[parameters('LS_DataLake_accountKey')]"
+					},
+					"LS_AWS_S3_properties_typeProperties_accessKeyId": {
+						"value": "[parameters('LS_AWS_S3_properties_typeProperties_accessKeyId')]"
+					},
+					"LS_Cloud_AzureSqlDatabase_properties_typeProperties_server": {
+						"value": "[parameters('LS_Cloud_AzureSqlDatabase_properties_typeProperties_server')]"
+					},
+					"LS_Cloud_AzureSqlDatabase_properties_typeProperties_database": {
+						"value": "[parameters('LS_Cloud_AzureSqlDatabase_properties_typeProperties_database')]"
+					},
+					"LS_Cloud_AzureSqlDatabase_properties_typeProperties_userName": {
+						"value": "[parameters('LS_Cloud_AzureSqlDatabase_properties_typeProperties_userName')]"
+					},
+					"LS_DataLake_properties_typeProperties_url": {
+						"value": "[parameters('LS_DataLake_properties_typeProperties_url')]"
+					},
+					"LS_GitHub_properties_typeProperties_url": {
+						"value": "[parameters('LS_GitHub_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "Vasanthi-DataFactory_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LS_MySQL_OnPrem_password": {
+						"value": "[parameters('LS_MySQL_OnPrem_password')]"
+					},
+					"LS_MySQL_OnPrem_properties_typeProperties_server": {
+						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_server')]"
+					},
+					"LS_MySQL_OnPrem_properties_typeProperties_database": {
+						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_database')]"
+					},
+					"LS_MySQL_OnPrem_properties_typeProperties_username": {
+						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_username')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'Vasanthi-DataFactory_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "Vasanthi-DataFactory_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"TG_Event_AddFile_properties_typeProperties_scope": {
+						"value": "[parameters('TG_Event_AddFile_properties_typeProperties_scope')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'Vasanthi-DataFactory_ArmTemplate_1')]"
+			]
+		}
+	]
+}
