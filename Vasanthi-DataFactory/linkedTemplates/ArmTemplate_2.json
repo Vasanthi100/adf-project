@@ -7,15 +7,219 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "Vasanthi-DataFactory"
 		},
-		"TG_Event_AddFile_properties_typeProperties_scope": {
+		"LS_MySQL_OnPrem_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_MySQL_OnPrem'"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "/subscriptions/379adc65-7c1f-4650-a15b-273cd2d3493d/resourceGroups/V-ADE-RG/providers/Microsoft.Storage/storageAccounts/vdatalakestorageaccount"
+			"defaultValue": "127.0.0.1"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "dbvasanthi"
+		},
+		"LS_MySQL_OnPrem_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "root"
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/scd_dest')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Cloud_AzureSqlDatabase",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Employee_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "First_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Salary",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Location",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "Sales",
+					"table": "employees"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_MySQL_OnPrem')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "MySql",
+				"typeProperties": {
+					"server": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_server')]",
+					"port": 3306,
+					"database": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_database')]",
+					"username": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_username')]",
+					"sslMode": 1,
+					"useSystemTrustStore": 0,
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_MySQL_OnPrem_password')]"
+					},
+					"driverVersion": "v2"
+				},
+				"connectVia": {
+					"referenceName": "SelfHostedIR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/10_PL_BulkCopy')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupTablesList",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "select table_schema, table_name from information_schema.tables where table_schema = 'dbo'",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "10_DS_Lookup_BulkTables",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach_TableLoop",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupTablesList",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupTablesList').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CopyTables",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_BulkTables_Copy_src",
+											"type": "DatasetReference",
+											"parameters": {
+												"p_schemaname": {
+													"value": "@item().table_schema",
+													"type": "Expression"
+												},
+												"p_tablename": {
+													"value": "@item().table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "10_DS_BulkCopy_Tables_Dest",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-07-06T13:48:01Z"
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/1_PL_Copy_Delete_File')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -586,7 +790,9 @@
 					"tableName": "`dim_customer`"
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_MySQL_OnPrem')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/11_scd_dataflow')]",
@@ -655,7 +861,9 @@
 					]
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/scd_dest')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/12_scd2_dataflow')]",
@@ -997,6 +1205,99 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/dataflowjoins')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_Customers",
+								"type": "DatasetReference"
+							},
+							"name": "sourcecustomers"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_Orders",
+								"type": "DatasetReference"
+							},
+							"name": "sourceorders"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_JoinsOutput",
+								"type": "DatasetReference"
+							},
+							"name": "sinkfile"
+						}
+					],
+					"transformations": [
+						{
+							"name": "joincustomersorders"
+						},
+						{
+							"name": "selectcustord"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Customer_ID as short,",
+						"          Name as string,",
+						"          Email as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> sourcecustomers",
+						"source(output(",
+						"          Order_ID as short,",
+						"          Cust_ID as short,",
+						"          Price as short",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> sourceorders",
+						"sourcecustomers, sourceorders join(Customer_ID == Cust_ID,",
+						"     joinType:'outer',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     partitionBy('hash', 1),",
+						"     broadcast: 'auto')~> joincustomersorders",
+						"joincustomersorders select(mapColumn(",
+						"          Customer_ID,",
+						"          Name,",
+						"          Email,",
+						"          Order_ID,",
+						"          Price",
+						"     ),",
+						"     partitionBy('hash', 1),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectcustord",
+						"selectcustord sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          Customer_ID,",
+						"          Name,",
+						"          Email,",
+						"          Order_ID,",
+						"          Price",
+						"     ),",
+						"     partitionBy('hash', 1)) ~> sinkfile"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/11_PL_SCD-Type-1')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1090,6 +1391,53 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/12_scd2_dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/14_PL_Joins')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DataFlowJoins",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflowjoins",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourcecustomers": {},
+									"sourceorders": {},
+									"sinkfile": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflowjoins')]"
 			]
 		},
 		{
@@ -1465,152 +1813,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/3_Dataflow_S3')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/4_PL_ProductionReady')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ExecuteCopyDelete_PL",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "1_PL_Copy_Delete_File",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "ExecuteGitHub_PL",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "ExecuteCopyDelete_PL",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "2_PL_GitHub_FileCopy",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "ExecuteSalesFiles_PL",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "ExecuteGitHub_PL",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "3_PL_SalesFilesNamesOnly",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2026-06-25T01:32:32Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/1_PL_Copy_Delete_File')]",
-				"[concat(variables('factoryId'), '/pipelines/2_PL_GitHub_FileCopy')]",
-				"[concat(variables('factoryId'), '/pipelines/3_PL_SalesFilesNamesOnly')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TG_SalesFilesOnly')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "3_PL_SalesFilesNamesOnly",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Minute",
-						"interval": 15,
-						"startTime": "2026-06-24T02:40:00",
-						"endTime": "2026-06-24T20:49:00",
-						"timeZone": "India Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/3_PL_SalesFilesNamesOnly')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TG_Event_AddFile')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "4_PL_ProductionReady",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "BlobEventsTrigger",
-				"typeProperties": {
-					"blobPathBeginsWith": "/source-container/blobs/",
-					"blobPathEndsWith": "products.csv",
-					"ignoreEmptyBlobs": true,
-					"scope": "[parameters('TG_Event_AddFile_properties_typeProperties_scope')]",
-					"events": [
-						"Microsoft.Storage.BlobCreated"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/4_PL_ProductionReady')]"
 			]
 		}
 	]

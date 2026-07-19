@@ -134,18 +134,6 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
-					},
-					"LS_MySQL_OnPrem_password": {
-						"value": "[parameters('LS_MySQL_OnPrem_password')]"
-					},
-					"LS_MySQL_OnPrem_properties_typeProperties_server": {
-						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_server')]"
-					},
-					"LS_MySQL_OnPrem_properties_typeProperties_database": {
-						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_database')]"
-					},
-					"LS_MySQL_OnPrem_properties_typeProperties_username": {
-						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_username')]"
 					}
 				}
 			},
@@ -167,13 +155,45 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"LS_MySQL_OnPrem_password": {
+						"value": "[parameters('LS_MySQL_OnPrem_password')]"
+					},
+					"LS_MySQL_OnPrem_properties_typeProperties_server": {
+						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_server')]"
+					},
+					"LS_MySQL_OnPrem_properties_typeProperties_database": {
+						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_database')]"
+					},
+					"LS_MySQL_OnPrem_properties_typeProperties_username": {
+						"value": "[parameters('LS_MySQL_OnPrem_properties_typeProperties_username')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'Vasanthi-DataFactory_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "Vasanthi-DataFactory_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
 					"TG_Event_AddFile_properties_typeProperties_scope": {
 						"value": "[parameters('TG_Event_AddFile_properties_typeProperties_scope')]"
 					}
 				}
 			},
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'Vasanthi-DataFactory_ArmTemplate_1')]"
+				"[resourceId('Microsoft.Resources/deployments', 'Vasanthi-DataFactory_ArmTemplate_2')]"
 			]
 		}
 	]
