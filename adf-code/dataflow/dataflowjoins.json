@@ -1,0 +1,90 @@
+{
+	"name": "dataflowjoins",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Customers",
+						"type": "DatasetReference"
+					},
+					"name": "sourcecustomers"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_Orders",
+						"type": "DatasetReference"
+					},
+					"name": "sourceorders"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_JoinsOutput",
+						"type": "DatasetReference"
+					},
+					"name": "sinkfile"
+				}
+			],
+			"transformations": [
+				{
+					"name": "joincustomersorders"
+				},
+				{
+					"name": "selectcustord"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Customer_ID as short,",
+				"          Name as string,",
+				"          Email as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourcecustomers",
+				"source(output(",
+				"          Order_ID as short,",
+				"          Cust_ID as short,",
+				"          Price as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourceorders",
+				"sourcecustomers, sourceorders join(Customer_ID == Cust_ID,",
+				"     joinType:'outer',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     partitionBy('hash', 1),",
+				"     broadcast: 'auto')~> joincustomersorders",
+				"joincustomersorders select(mapColumn(",
+				"          Customer_ID,",
+				"          Name,",
+				"          Email,",
+				"          Order_ID,",
+				"          Price",
+				"     ),",
+				"     partitionBy('hash', 1),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectcustord",
+				"selectcustord sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          Customer_ID,",
+				"          Name,",
+				"          Email,",
+				"          Order_ID,",
+				"          Price",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> sinkfile"
+			]
+		}
+	}
+}
