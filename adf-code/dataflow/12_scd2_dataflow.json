@@ -1,0 +1,195 @@
+{
+	"name": "12_scd2_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_DataLake_Source",
+						"type": "DatasetReference"
+					},
+					"name": "datalakesource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_AzureSQLDB_Source",
+						"type": "DatasetReference"
+					},
+					"name": "ADBSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_InsertDB",
+						"type": "DatasetReference"
+					},
+					"name": "InsertSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_UpdateSink",
+						"type": "DatasetReference"
+					},
+					"name": "UPDATESink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SrcderivedColumnHashCode"
+				},
+				{
+					"name": "DestDerivedColumnHC",
+					"description": "Creating/updating the columns 'Emp_ID, FName, Salary, Loc'"
+				},
+				{
+					"name": "SRCexistsHC"
+				},
+				{
+					"name": "IsActiveDerivedColumn"
+				},
+				{
+					"name": "InsertSelect"
+				},
+				{
+					"name": "EmpIDExists"
+				},
+				{
+					"name": "DestexistsHC"
+				},
+				{
+					"name": "IsActiveDestDerivedColumn"
+				},
+				{
+					"name": "UpdateAlterRow"
+				},
+				{
+					"name": "UPDATESelect"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Employee_ID as integer,",
+				"          First_Name as string,",
+				"          Salary as integer,",
+				"          Location as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     partitionBy('hash', 1)) ~> datalakesource",
+				"source(output(",
+				"          SurrKey as integer,",
+				"          Emp_ID as integer,",
+				"          FName as string,",
+				"          Salary as integer,",
+				"          Loc as string,",
+				"          Is_Active as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table',",
+				"     partitionBy('hash', 1)) ~> ADBSource",
+				"datalakesource derive({Hash Code} = md5(Employee_ID,First_Name,Salary,Location),",
+				"     partitionBy('hash', 1)) ~> SrcderivedColumnHashCode",
+				"ADBSource derive({Hash Code} = md5(Emp_ID,FName,Salary,Loc),",
+				"     partitionBy('hash', 1)) ~> DestDerivedColumnHC",
+				"SrcderivedColumnHashCode, DestDerivedColumnHC exists(SrcderivedColumnHashCode@{Hash Code} == DestDerivedColumnHC@{Hash Code},",
+				"     negate:true,",
+				"     partitionBy('hash', 1),",
+				"     broadcast: 'auto')~> SRCexistsHC",
+				"SRCexistsHC derive(Is_Active = 1,",
+				"     partitionBy('hash', 1)) ~> IsActiveDerivedColumn",
+				"IsActiveDerivedColumn select(mapColumn(",
+				"          Employee_ID,",
+				"          First_Name,",
+				"          Salary,",
+				"          Location,",
+				"          Is_Active",
+				"     ),",
+				"     partitionBy('hash', 1),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> InsertSelect",
+				"DestDerivedColumnHC, datalakesource exists(Emp_ID == Employee_ID,",
+				"     negate:false,",
+				"     partitionBy('hash', 1),",
+				"     broadcast: 'auto')~> EmpIDExists",
+				"EmpIDExists, SrcderivedColumnHashCode exists(DestDerivedColumnHC@{Hash Code} == SrcderivedColumnHashCode@{Hash Code},",
+				"     negate:true,",
+				"     partitionBy('hash', 1),",
+				"     broadcast: 'auto')~> DestexistsHC",
+				"DestexistsHC derive(Is_Active = 0,",
+				"     partitionBy('hash', 1)) ~> IsActiveDestDerivedColumn",
+				"IsActiveDestDerivedColumn alterRow(updateIf(true()),",
+				"     partitionBy('hash', 1)) ~> UpdateAlterRow",
+				"UpdateAlterRow select(mapColumn(",
+				"          SurrKey,",
+				"          Emp_ID,",
+				"          FName,",
+				"          Salary,",
+				"          Loc,",
+				"          Is_Active",
+				"     ),",
+				"     partitionBy('hash', 1),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> UPDATESelect",
+				"InsertSelect sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          SurrKey as integer,",
+				"          Emp_ID as integer,",
+				"          FName as string,",
+				"          Salary as integer,",
+				"          Loc as string,",
+				"          Is_Active as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Emp_ID = Employee_ID,",
+				"          FName = First_Name,",
+				"          Salary,",
+				"          Loc = Location,",
+				"          Is_Active",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> InsertSink",
+				"UPDATESelect sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          SurrKey as integer,",
+				"          Emp_ID as integer,",
+				"          FName as string,",
+				"          Salary as integer,",
+				"          Loc as string,",
+				"          Is_Active as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['SurrKey'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SurrKey,",
+				"          Emp_ID,",
+				"          FName,",
+				"          Salary,",
+				"          Loc,",
+				"          Is_Active",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> UPDATESink"
+			]
+		}
+	}
+}

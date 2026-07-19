@@ -1,0 +1,25 @@
+{
+	"name": "TG_Event_AddFile",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "4_PL_ProductionReady",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/source-container/blobs/",
+			"blobPathEndsWith": "products.csv",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/379adc65-7c1f-4650-a15b-273cd2d3493d/resourceGroups/V-ADE-RG/providers/Microsoft.Storage/storageAccounts/vdatalakestorageaccount",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

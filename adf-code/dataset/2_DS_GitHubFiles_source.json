@@ -1,0 +1,23 @@
+{
+	"name": "2_DS_GitHubFiles_source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_GitHub",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": "Vasanthi100/Vasanthi_ADF_DataFiles/refs/heads/main/sales_invoice.csv"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,14 @@
+{
+	"name": "LS_GitHub",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "This linked service is used to link with GitHub",
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://raw.githubusercontent.com/",
+			"enableServerCertificateValidation": false,
+			"authenticationType": "Anonymous"
+		}
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"name": "TG_SalesFilesOnly",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "3_PL_SalesFilesNamesOnly",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 15,
+				"startTime": "2026-06-24T02:40:00",
+				"endTime": "2026-06-24T20:49:00",
+				"timeZone": "India Standard Time"
+			}
+		}
+	}
+}

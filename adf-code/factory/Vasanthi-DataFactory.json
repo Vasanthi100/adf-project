@@ -1,0 +1,15 @@
+{
+	"name": "Vasanthi-DataFactory",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "southindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "1f88b924-47e5-470f-8b4c-32d1480e73e1",
+		"tenantId": "0ebf8a6e-6dad-4fbf-bf75-688cff72a09f"
+	}
+}

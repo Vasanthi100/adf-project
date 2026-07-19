@@ -1,0 +1,17 @@
+{
+	"name": "LS_Cloud_AzureSqlDatabase",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "vasanthi-sqlserverdatabase.database.windows.net",
+			"database": "V-AzureSQLDB",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "adfazuresqldatabse",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDA1RjE1NDcyLTgzMjQtNDZENy1BODRFLTM4MzZFRDYxODM2QV9hMGJjZmE0My0wOTg4LTRiZjAtYTk2MC1mZTM5NjIyZTAwMTMiDQp9"
+		}
+	}
+}

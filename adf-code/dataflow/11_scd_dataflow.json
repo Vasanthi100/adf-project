@@ -1,0 +1,66 @@
+{
+	"name": "11_scd_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "11_DS_scd_source",
+						"type": "DatasetReference"
+					},
+					"name": "scdsource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "scd_dest",
+						"type": "DatasetReference"
+					},
+					"name": "sinkscd"
+				}
+			],
+			"transformations": [
+				{
+					"name": "alterRow1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Employee_ID as integer,",
+				"          First_Name as string,",
+				"          Salary as decimal(10,2),",
+				"          Location as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> scdsource",
+				"scdsource alterRow(upsertIf(true())) ~> alterRow1",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Employee_ID as integer,",
+				"          First_Name as string,",
+				"          Salary as integer,",
+				"          Location as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Employee_ID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Employee_ID,",
+				"          First_Name,",
+				"          Salary,",
+				"          Location",
+				"     )) ~> sinkscd"
+			]
+		}
+	}
+}
